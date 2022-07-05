@@ -21,29 +21,21 @@ tasks_ref = db.collection(u'tasks')
 
 
 class Task(object):
-    def __init__(self, title, stage, lastActivity, members = [], dueDate = None, description = ""):
+    def __init__(self, title, stage, lastActivity, members = [], dueDate = None):
         self.title = title
         self.stage = stage
         self.lastActivity = lastActivity
         self.members = members
         self.dueDate = dueDate
-        self.description = description
 
     def to_dict(self):
         query = {
             u'Title': self.title,
             u'Stage': self.stage,
+            u'Members': self.members,
+            u'dueDate': self.dueDate,
             u'lastActivity': self.lastActivity
         }
-
-        if self.members:
-            query[u'Members'] = self.members
-
-        if self.dueDate:
-            query[u'dueDate'] = self.dueDate
-
-        if self.description:
-            query[u'Description'] = self.description
 
         return query
 
@@ -54,8 +46,7 @@ class Task(object):
                 Stage={self.stage}, \
                 lastActivity={self.lastActivity}, \
                 Members={self.members}, \
-                dueDate={self.dueDate},\
-                Description={self.description}\
+                dueDate={self.dueDate}\
             )'
         )
 
@@ -103,7 +94,6 @@ def makeTasks(toParse):
     members = []
     dueDate = ""
     lastActivity = ""
-    description = ""
     buffer = toParse.split('\n')
 
     buf_iter = iter(buffer)
