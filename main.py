@@ -2,20 +2,18 @@ from trello import TrelloClient
 import apiKeys as k
 import Board
 import Task
-import firebase_admin
+from firebase_admin import initialize_app
 from firebase_admin import credentials
 from google.cloud import firestore
-from typing import Final
 import os
-from json import load
 
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = k.path_to_GAC
-CREDENTIALS: Final = credentials.Certificate(k.path_to_certificate)
-firebase_admin.initialize_app(CREDENTIALS)
+CREDENTIALS = credentials.Certificate(k.path_to_certificate)
+initialize_app(CREDENTIALS)
 FIRESTORE = firestore.Client()
 
-CLIENT: Final = TrelloClient(
+CLIENT = TrelloClient(
     api_key = k.api_key,
     api_secret = k.api_secret,
     token = k.token,
