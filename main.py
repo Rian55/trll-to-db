@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
+import threading
+
 from trello import TrelloClient
-import apiKeys as k
+import apiKeys as Key
 import Board
 import Task
 from firebase_admin import initialize_app
@@ -18,15 +20,15 @@ def to_log(text):
     file.close()
 
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = k.path_to_GAC
-CREDENTIALS = credentials.Certificate(k.path_to_certificate)
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = Key.path_to_GAC
+CREDENTIALS = credentials.Certificate(Key.path_to_certificate)
 initialize_app(CREDENTIALS)
 FIRESTORE = firestore.Client()
 
 CLIENT = TrelloClient(
-    api_key=k.api_key,
-    api_secret=k.api_secret,
-    token=k.token,
+    api_key=Key.api_key,
+    api_secret=Key.api_secret,
+    token=Key.token,
     # token_secret = 'your-oauth-token-secret'
 )
 
@@ -57,8 +59,8 @@ def set_update_boards(boards):
         for member in board.all_members():
             members.append(member.full_name)
         lists = []
-        for list in board.get_lists(list_filter="open"):
-            lists.append(list.name)
+        for trelloList in board.get_lists(list_filter="open"):
+            lists.append(trelloList.name)
         new_board = Board.Board(id=board.id, name=board.name, members=members, lists=lists)
         boards_to_send.append(new_board)
 
