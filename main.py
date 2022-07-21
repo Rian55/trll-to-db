@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-import threading
-
+from time import sleep
 from trello import TrelloClient
 import apiKeys as Key
 import Board
@@ -10,15 +9,6 @@ from firebase_admin import credentials
 from google.cloud import firestore
 import os
 from datetime import datetime
-
-
-def to_log(text):
-    file = open('logs.txt', 'a+')
-    now = datetime.now()
-    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-    print(dt_string, ": ", text, file=file)
-    file.close()
-
 
 os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = Key.path_to_GAC
 CREDENTIALS = credentials.Certificate(Key.path_to_certificate)
@@ -35,20 +25,15 @@ CLIENT = TrelloClient(
 organizations = []
 ALL_BOARDS = []
 ALL_MEMBERS = []
+tasks_ref = FIRESTORE.collection(u'tasks')
 
-try:
-    organizations = CLIENT.list_organizations()
-    EWP_ORGANIZATION = organizations[0]
 
-    for org in organizations:
-        if org.name == "ewpteam":
-            EWP_ORGANIZATION = org
-
-    ALL_BOARDS = EWP_ORGANIZATION.get_boards(list_filter="open")
-    ALL_MEMBERS = EWP_ORGANIZATION.get_members()
-    to_log("Successfully getting organizations/boards/members")
-except:
-    to_log("Error getting organizations/boards/members")
+def to_log(text):
+    file = open('logs.txt', 'a+')
+    now = datetime.now()
+    dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+    print(dt_string, ": ", text, file=file)
+    file.close()
 
 
 def set_update_boards(boards):
@@ -73,12 +58,6 @@ def set_update_boards(boards):
     to_log("Board list has been successfully pushed to firestore.")
 
 
-try:
-    set_update_boards(ALL_BOARDS)
-except:
-    to_log("Error in set_update_boards")
-
-
 def set_update_tasks(boards):
     tasks_to_send = []
 
@@ -96,7 +75,6 @@ def set_update_tasks(boards):
                                            dueDate=task.due_date))
 
     to_log("Task list has been successfully created.")
-    tasks_ref = FIRESTORE.collection(u'tasks')
 
     for task in tasks_to_send:
         tasks_ref.document(task.id).set(task.to_dict(), merge=True)
@@ -104,7 +82,41 @@ def set_update_tasks(boards):
     to_log("Task list has been successfully pushed to firestore.")
 
 
-try:
-    set_update_tasks(ALL_BOARDS)
-except:
-    to_log("Error in set_update_tasks.")
+def write_to_fb():
+    global ALL_BOARDS
+    try:
+        organizations = CLIENT.list_organizations()
+        EWP_ORGANIZATION = organizations[0]
+
+        for org in organizations:
+            if org.name == "ewpteam":
+                EWP_ORGANIZATION = org
+
+        ALL_BOARDS = EWP_ORGANIZATION.get_boards(list_filter="open")
+        ALL_MEMBERS = EWP_ORGANIZATION.get_members()
+        to_log("Successfully getting organizations/boards/members")
+    except:
+        to_log("Error getting organizations/boards/members")
+
+    try:
+        set_update_boards(ALL_BOARDS)
+    except:
+        to_log("Error in set_update_boards")
+
+    try:
+        set_update_tasks(ALL_BOARDS)
+    except:
+        to_log("Error in set_update_tasks.")
+
+
+def on_snapshot(col_snapshot, changes, read_time):
+    for change in changes:
+        if change.type.name == 'ADDED':
+            print(f'New city: {change.document.id}')
+        elif change.type.name == 'MODIFIED':
+            CLIENT.get_card(change.document.id).name.set_closed(True)
+
+write_to_fb()
+query_watch = tasks_ref.on_snapshot(on_snapshot)
+while True:
+    sleep(1)
