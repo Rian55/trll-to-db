@@ -1,5 +1,5 @@
 class Board(object):
-    def __init__(self, id, name, members = [], lists = []):
+    def __init__(self, id, name, members=[], lists=[]):
         self.name = name
         self.members = members
         self.lists = lists
@@ -14,7 +14,7 @@ class Board(object):
         return query
 
     def __repr__(self):
-        return(
+        return (
             f'boards(\
                 Name={self.name}, \
                 Members={self.members}, \
