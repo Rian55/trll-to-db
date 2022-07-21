@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from trello import TrelloClient
 import apiKeys as k
 import Board
