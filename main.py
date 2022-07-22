@@ -97,7 +97,7 @@ def write_to_fb():
         for org in organizations:
             if org.name == "ewpteam":
                 EWP_ORGANIZATION = org
-    
+
         ALL_BOARDS = EWP_ORGANIZATION.get_boards(list_filter="open")
         ALL_MEMBERS = EWP_ORGANIZATION.get_members()
         to_log("Successfully getting organizations/boards/members")
@@ -164,6 +164,8 @@ def on_snapshot(col_snapshot, changes, read_time):
         CARD_ADDED_COUNT += 1
 
 write_to_fb()
+schedule.every(20).minutes.do(write_to_fb)
 query_watch = tasks_ref.on_snapshot(on_snapshot)
 while True:
+    schedule.run_pending()
     sleep(1)
