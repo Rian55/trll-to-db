@@ -3,7 +3,7 @@ from datetime import datetime
 
 
 class Task(object):
-    def __init__(self, id, title, list, createdDate, board, members = [], dueDate = datetime(1, 1, 1, 0, 0)):
+    def __init__(self, id, title, list, createdDate, board, members = [], dueDate = datetime(1, 1, 1, 0, 0), removed = False):
         self.title = title
         self.list = list
         self.createdDate = createdDate
@@ -11,9 +11,10 @@ class Task(object):
         self.dueDate = dueDate
         self.id = id
         self.board = board
+        self.removed = removed
 
-    def from_dict(self, snapshot):
-        dict = u'{}'.format(snapshot.to_dict())
+    def from_snapshot(self, snapshot):
+        dict = snapshot.to_dict()
         self.id = snapshot.id
         self.title = dict['Title']
         self.list = dict['List']
@@ -21,6 +22,7 @@ class Task(object):
         self.createdDate = dict['createdDate']
         self.board = dict['Board']
         self.members = dict['Members']
+        self.removed = dict['Removed']
 
     def to_dict(self):
         query = {
@@ -37,6 +39,7 @@ class Task(object):
     def __repr__(self):
         return(
             f'tasks(\
+                Id={self.id},\
                 Title={self.title}, \
                 List={self.list}, \
                 createdDate={self.createdDate}, \
